@@ -1,0 +1,65 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Python packaging & distribution
+build/
+*.egg-info/
+
+# Frontend build & dependencies
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# Environment variables & secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Local SQLite databases & testing DBs
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Test coverage & reports
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# Cache & Runtime logs
+cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Scratch & temporary files
+scratch/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Explicitly track required ML models and configurations
+!models/*.joblib
+!models/*.json

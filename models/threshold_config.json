@@ -1,0 +1,13 @@
+{
+  "model_name": "Calibrated Logistic Regression (Balanced)",
+  "model_file": "logistic_regression_calibrated.joblib",
+  "preprocessor_file": "preprocessor.joblib",
+  "calibration_method": "sigmoid (Platt scaling)",
+  "selected_operating_threshold": 0.25,
+  "high_recall_threshold": 0.2,
+  "balanced_f1_threshold": 0.25,
+  "high_precision_threshold": 0.4,
+  "uncalibrated_operating_threshold": 0.6,
+  "default_threshold": 0.5,
+  "rationale": "Threshold 0.25 on the calibrated model yields an optimal balance of ~79% fraud recall, ~73% precision, and F1 of ~0.76 with an exemplary Brier score of 0.01545. For maximum fraud capture, threshold 0.20 can be utilized."
+}

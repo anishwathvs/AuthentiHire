@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-09-19T16:50:24.051934",
+  "selected_configuration": "Config A (50/30/20 - Baseline)",
+  "weights": {
+    "ml_weight": 0.5,
+    "rule_weight": 0.3,
+    "company_weight": 0.2
+  },
+  "operating_flagging_threshold": 25,
+  "risk_bands": {
+    "LOW_RISK": [
+      0,
+      24
+    ],
+    "MODERATE_RISK": [
+      25,
+      49
+    ],
+    "HIGH_RISK": [
+      50,
+      74
+    ],
+    "CRITICAL_RISK": [
+      75,
+      100
+    ]
+  },
+  "guardrail_settings": {
+    "critical_scam_rule_floor": 55,
+    "raw_ip_url_floor": 50,
+    "compound_ml_rule_floor": 75,
+    "insufficient_evidence_char_limit": 50
+  },
+  "validation_metrics": {
+    "threshold": 25,
+    "accuracy": 0.9862,
+    "precision": 0.7952,
+    "recall": 0.9635,
+    "f1_score": 0.8713,
+    "roc_auc": 0.9974,
+    "pr_auc": 0.9349,
+    "fpr": 0.0127,
+    "fnr": 0.0365,
+    "confusion_matrix": {
+      "TN": 2645,
+      "FP": 34,
+      "FN": 5,
+      "TP": 132
+    }
+  },
+  "validation_band_breakdown": [
+    {
+      "risk_band": "LOW RISK",
+      "total": 2650,
+      "legitimate": 2645,
+      "fraudulent": 5,
+      "fraud_rate_pct": 0.19
+    },
+    {
+      "risk_band": "MODERATE RISK",
+      "total": 66,
+      "legitimate": 29,
+      "fraudulent": 37,
+      "fraud_rate_pct": 56.06
+    },
+    {
+      "risk_band": "HIGH RISK",
+      "total": 100,
+      "legitimate": 5,
+      "fraudulent": 95,
+      "fraud_rate_pct": 95.0
+    },
+    {
+      "risk_band": "CRITICAL RISK",
+      "total": 0,
+      "legitimate": 0,
+      "fraudulent": 0,
+      "fraud_rate_pct": 0.0
+    }
+  ]
+}
