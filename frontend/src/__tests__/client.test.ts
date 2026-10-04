@@ -151,4 +151,32 @@ describe('AuthentiHire API Client', () => {
     expect(info.model_name).toBe('Calibrated Logistic Regression');
     expect(info.decision_threshold).toBe(0.25);
   });
+
+  it('manages auth tokens in localStorage and attaches Authorization header', async () => {
+    const { setAuthToken, getAuthToken, clearAuthToken } = await import('../api/client');
+    setAuthToken('test-jwt-token-xyz');
+    expect(getAuthToken()).toBe('test-jwt-token-xyz');
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 'u1', email: 'test@example.com' }),
+    });
+
+    const { fetchCurrentUser } = await import('../api/client');
+    await fetchCurrentUser();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/auth/me'),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-jwt-token-xyz',
+        }),
+      })
+    );
+
+    clearAuthToken();
+    expect(getAuthToken()).toBeNull();
+  });
 });
+

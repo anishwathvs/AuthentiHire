@@ -1,0 +1,59 @@
+# ==============================================================================
+# AuthentiHire - Render Blueprint (Infrastructure-as-Code)
+# ==============================================================================
+# Deploys Managed PostgreSQL + FastAPI Backend + Vite React Frontend in 1 Click
+# ==============================================================================
+
+databases:
+  - name: authentihire-db
+    databaseName: authentihire
+    user: authentihire_user
+    plan: free
+
+services:
+  # ----------------------------------------------------------------------------
+  # FastAPI Backend Service
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: authentihire-api
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn src.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: authentihire-db
+          property: connectionString
+      - key: AUTH_SECRET_KEY
+        generateValue: true
+      - key: AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: ENABLE_HSTS
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # ----------------------------------------------------------------------------
+  # React + Vite Static Frontend
+  # ----------------------------------------------------------------------------
+  - type: static
+    name: authentihire-web
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false

@@ -22,8 +22,53 @@ import {
   ApiError,
 } from '../types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
 const SESSION_STORAGE_KEY = 'authentihire_anonymous_session_id';
+const AUTH_TOKEN_STORAGE_KEY = 'authentihire_auth_token';
+
+/**
+ * Returns stored JWT access token for cross-origin authorization headers.
+ */
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null;
+  }
+  return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+/**
+ * Stores JWT access token in localStorage for cross-origin authenticated requests.
+ */
+export function setAuthToken(token: string): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  }
+}
+
+/**
+ * Clears stored JWT access token on logout.
+ */
+export function clearAuthToken(): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  }
+}
+
+/**
+ * Constructs common request headers including Bearer authorization if token is present.
+ */
+function getRequestHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    ...extra,
+  };
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 /**
  * Returns or generates a persistent anonymous session ID for analysis ownership.
@@ -132,7 +177,11 @@ export async function registerUser(payload: RegisterRequest): Promise<AuthRespon
       return await handleResponseError(response);
     }
 
-    return (await response.json()) as AuthResponse;
+    const data = (await response.json()) as AuthResponse;
+    if (data.token) {
+      setAuthToken(data.token);
+    }
+    return data;
   } catch (err: unknown) {
     if (err instanceof AuthentiHireApiError) throw err;
     throw new AuthentiHireApiError('Unable to connect to authentication service.', 0, 'NETWORK_ERROR');
@@ -159,7 +208,11 @@ export async function loginUser(payload: LoginRequest): Promise<AuthResponse> {
       return await handleResponseError(response);
     }
 
-    return (await response.json()) as AuthResponse;
+    const data = (await response.json()) as AuthResponse;
+    if (data.token) {
+      setAuthToken(data.token);
+    }
+    return data;
   } catch (err: unknown) {
     if (err instanceof AuthentiHireApiError) throw err;
     throw new AuthentiHireApiError('Unable to connect to authentication service.', 0, 'NETWORK_ERROR');
@@ -167,7 +220,7 @@ export async function loginUser(payload: LoginRequest): Promise<AuthResponse> {
 }
 
 /**
- * Logs out and clears active session cookie.
+ * Logs out and clears active session cookie and stored token.
  */
 export async function logoutUser(): Promise<LogoutResponse> {
   const url = `${API_BASE_URL}/api/v1/auth/logout`;
@@ -175,10 +228,10 @@ export async function logoutUser(): Promise<LogoutResponse> {
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: getRequestHeaders(),
     });
+
+    clearAuthToken();
 
     if (!response.ok) {
       return await handleResponseError(response);
@@ -186,6 +239,7 @@ export async function logoutUser(): Promise<LogoutResponse> {
 
     return (await response.json()) as LogoutResponse;
   } catch (err: unknown) {
+    clearAuthToken();
     if (err instanceof AuthentiHireApiError) throw err;
     throw new AuthentiHireApiError('Unable to complete logout request.', 0, 'NETWORK_ERROR');
   }
@@ -200,9 +254,7 @@ export async function fetchCurrentUser(): Promise<User> {
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: getRequestHeaders(),
     });
 
     if (!response.ok) {
@@ -234,11 +286,10 @@ export async function analyzeJobPosting(
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
-      headers: {
+      headers: getRequestHeaders({
         'Content-Type': 'application/json',
-        Accept: 'application/json',
         'X-Session-ID': sessionId,
-      },
+      }),
       body: JSON.stringify(payload),
     });
 
@@ -253,7 +304,7 @@ export async function analyzeJobPosting(
     }
     // Network or connection offline error
     throw new AuthentiHireApiError(
-      'Unable to connect to the AuthentiHire analysis backend. Please check that the server is running on http://127.0.0.1:8000.',
+      `Unable to connect to the AuthentiHire analysis backend. Please check that the server is reachable at ${API_BASE_URL}.`,
       0,
       'NETWORK_ERROR'
     );
@@ -271,10 +322,9 @@ export async function fetchAnalysisById(analysisId: string): Promise<JobAnalysis
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
+      headers: getRequestHeaders({
         'X-Session-ID': sessionId,
-      },
+      }),
     });
 
     if (!response.ok) {
@@ -297,9 +347,7 @@ export async function fetchDashboardSummary(): Promise<DashboardSummaryResponse>
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
+      headers: getRequestHeaders(),
     });
 
     if (!response.ok) {
@@ -343,10 +391,9 @@ export async function fetchAnalysesHistory(
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
+      headers: getRequestHeaders({
         'X-Session-ID': sessionId,
-      },
+      }),
     });
 
     if (!response.ok) {
@@ -371,10 +418,9 @@ export async function deleteAnalysis(analysisId: string): Promise<DeleteAnalysis
     const response = await fetch(url, {
       method: 'DELETE',
       credentials: 'include',
-      headers: {
-        Accept: 'application/json',
+      headers: getRequestHeaders({
         'X-Session-ID': sessionId,
-      },
+      }),
     });
 
     if (!response.ok) {

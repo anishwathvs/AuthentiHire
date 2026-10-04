@@ -1,0 +1,43 @@
+# ==============================================================================
+# AuthentiHire - Production Docker Compose (Backend + PostgreSQL)
+# ==============================================================================
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: authentihire
+      POSTGRES_USER: authentihire_user
+      POSTGRES_PASSWORD: authentihire_secure_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentihire_user -d authentihire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://authentihire_user:authentihire_secure_password@db:5432/authentihire
+      - AUTH_SECRET_KEY=change-this-in-production-use-openssl-rand-hex-32
+      - AUTH_ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - COOKIE_SECURE=false
+      - ENABLE_HSTS=false
+      - ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+
+volumes:
+  postgres_data:

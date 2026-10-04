@@ -596,8 +596,8 @@ async def model_info() -> ModelInfoResponse:
 if __name__ == "__main__":
     import uvicorn
 
-    host = os.environ.get("API_HOST", "127.0.0.1")
-    port = int(os.environ.get("API_PORT", "8000"))
+    host = os.environ.get("API_HOST", "0.0.0.0" if (os.environ.get("PORT") or os.environ.get("ENVIRONMENT") == "production") else "127.0.0.1")
+    port = int(os.environ.get("PORT", os.environ.get("API_PORT", "8000")))
 
     print(f"\nStarting AuthentiHire API server on http://{host}:{port} ...")
     uvicorn.run("src.api:app", host=host, port=port, reload=False)

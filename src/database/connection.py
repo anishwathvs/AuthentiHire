@@ -22,6 +22,10 @@ DEFAULT_DB_URL = f"sqlite:///{DEFAULT_DB_PATH}"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", DEFAULT_DB_URL)
 
+# Normalize legacy or cloud-provided postgres:// prefix to postgresql:// for SQLAlchemy 2.x
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # Configure engine arguments based on dialect
 engine_kwargs = {}
 if DATABASE_URL.startswith("sqlite"):
