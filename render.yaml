@@ -45,8 +45,9 @@ services:
   # ----------------------------------------------------------------------------
   # React + Vite Static Frontend
   # ----------------------------------------------------------------------------
-  - type: static
+  - type: web
     name: authentihire-web
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
